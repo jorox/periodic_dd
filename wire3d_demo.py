@@ -1,83 +1,155 @@
 '''
 =================
-3D wireframe plot
+3D wireframe plot of a PBC dislocation dipole
 =================
 
 A very basic demonstration of a wireframe plot.
 '''
-
-from mpl_toolkits.mplot3d import axes3d
 import matplotlib.pyplot as plt
 import numpy as np
 
-def u_dip(X,Y,b,R):
+def u_dip(x,y,z,b,Rb,Rd):
     """
-    return the displacement field of a dislocation in the range x,y
-    The dipole dislocations are at y=0 x = R[0] with Burgers b
-    and x=R[1] with burgers -b
+    return the displacement at (x,y,z) due to a dislocation dipole located at 
+    Rb and Rd with burgers b,-b respectively
     """
-    if X.shape != Y.shape: 
-        print("ERROR")
-        return 0
-    Z = np.zeros(X.shape)
-    for i in range(X.shape[0]):
-        for j in range(X.shape[1]):
-            Z[i,j] = b/2.0/3.1415*(np.arctan2(Y[i,j]-R[0][1],X[i,j]-R[0][0])
-                    -np.arctan2(Y[i,j]-R[1][1],X[i,j]-R[1][0]))
-    return Z
+    uz = b/2.0/3.1415*(np.arctan2(y-Rb[1],x-Rb[0])
+                      -np.arctan2(y-Rd[1],x-Rd[0]))
+                      
+    return np.array([0,0,uz])
+
+def u_sum(x,y,z,b,Rb,Rd,cx,cy,cz,n):
+    """
+    return the displacement at (x,y,z) due to a dislocation dipole and 
+    its images.
+    cx, cy, cz are the image translation vectors.
+    n is a vector specifying the number of images to include along each
+    image translation vector
+    """
+    Rb = np.array(Rb)
+    Rd = np.array(Rd)
+    cx = np.array(cx)
+    cy = np.array(cy)
+    cz = np.array(cz)
+    tmp = np.array([0.,0.,0.])
+    
+    n[np.where(np.isnan(Rb))[0][0]] = 0 #np.where returns a tuple of arrays
+    
+    for ix in range(-n[0],n[0]+1,1):
+        for iy in range(-n[1],n[1]+1,1):
+            for iz in range(-n[2],n[2]+1,1):
+                #print(ix,iy,iz)
+                tmp += u_dip(x,y,z,b,Rb+ix*cx+iy*cy+iz*cz,Rd+ix*cx+iy*cy+iz*cz)
+
+    return tmp
 
 
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
+def u_pbc(x,y,z,b,Rb,Rd,cx,cy,cz,n,origin,u0,d=None):
+    """
+    return the displacement at (x,y,z) due to a dislocation dipole and its 
+    periodic images with correction to restore periodic boundary conditions
+    origin is coordinates of the central image.
+    
+    u_pbc = u_sum - d.r -u0
+    0 = u_sum(r0) - d.r0 - u0 where r0 is a point on the central-image limit   
+    
+    d is a 3x3 constant matrix
+    
+    To find d we need to solve 3 linear systems
+    | x1 y1 z1 | |di1|    |u(r1)i|
+    | x2 y2 z2 | |di2| =  |u(r2)i|   where i=1,2,3 
+    | x3 y3 z3 | |di3|    |u(r3)i| 
 
-# 1. Define the full region (zero-th image + periodic)
-x_range = np.arange(-10,10.1,0.3); N = len(x_range)
-y_range = np.arange(-5,5.1,0.03); M = len(y_range)
-# 2. Define the region of interest i.e. the zero-th image
-roi = [[-1,1],[-0.5,0.5]]
+    """
+    # some prep
+    Rb = np.array(Rb)
+    Rd = np.array(Rd)
+    cx = np.array(cx)
+    cy = np.array(cy)
+    cz = np.array(cz)
+    
+    # get the 4 special points
+    if (d==None or u0==None):
+        print("uerr pNonearameters not given, calculating...")
+        rsp = []
+        rsp.append(origin + 0.3*cy)
+        rsp.append(origin + 0.5*cx)
+        rsp.append(origin + cy + 0.2*cx)
+        #rsp.append(origin + cx + cy)
+        #rsp = np.insert(rsp,3,1,axis=1) # insert a column of '1's to the end
+        print(rsp)
+        print(" determinant of mat = %1.5f"%(np.linalg.det(rsp)))
+        
+        # caluclate the values of u_sum at those points
+        u_sum_sp = []
+        for i in range(3):
+            u_sum_sp.append(u_sum(rsp[i][0],rsp[i][1],rsp[i][2],b,Rb,Rd,cx,cy,cz,n))
+    
+        # calculate the inverse matrix 
+        inv_rsp = np.linalg.inv(rsp)
+        d = []
+        #u0 = []
+        
+        for i in range(3):
+            tmp = [u_sum_sp[j][i] for j in range(3)]
+            tmp = np.array(tmp)
+            du_row = np.dot(inv_rsp,tmp) 
+            d.append(du_row[:3])
+            #u0.append(du_row[3])
+            # determine u_0 knowing that d.r+u_0 = [0,0,z] at central image 
+            # limits
+        d = np.array(d)
+        
+    tmp = u_sum(x,y,z,b,Rb,Rd,cx,cy,cz,n)
+    tmp = tmp - np.dot(d,np.array([x,y,z])) - u0
+    
+    return tmp,d
+    
+def main():
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
 
-# 3. Define the 2D matrices for calculation of u_z
-X = []
-Y = []
-for i in range(M): X.append(x_range) # X = MxN
-for i in range(N): Y.append(y_range) # Y = NxM
-X = np.array(X)
-Y = np.transpose(np.array(Y)) # Y = MxN
+    # 1. Define the full region (zero-th image + periodic)
+    x_range = np.arange(-1,1.1,0.05); N = len(x_range)
+    y_range = np.arange(-0.5,0.51,0.05); M = len(y_range)
+    
+  
 
-# u_dipole
-Z = u_dip(X,Y,1,[[0.5,0.0],[-0.5,0.0]])
+    X = []
+    Y = []
+    for i in range(M): X.append(x_range) # X = MxN
+    for i in range(N): Y.append(y_range) # Y = NxM
+    X = np.array(X)
+    Y = np.transpose(np.array(Y)) # Y = MxN
+    Z = np.zeros((M,N))
 
-# Find centers of dipoles in periodic images
-R_0 = np.arange(x_range[0],x_range[-1],roi[0][1]-roi[0][0])
-R_1 = np.arange(y_range[0],y_range[-1],roi[1][1]-roi[1][0])
-print(R_0)
-print(R_1)
-R = []
-for i in range(len(R_0)):
-    for j in range(len(R_1)):
-        if R_0[i]==0 and R_1[j]==0: continue
-        R.append([R_0[i],R_1[j]])
+    Rb = np.array([0.5,0,np.nan])  # location of first disloc
+    Rd = np.array([-0.5,0,np.nan]) # location of last disloc
+    derr = None
+    u0err = np.array([0.,0.,0.])
+    for i in range(M):
+        for j in range(N):
+            #shift = u_dip(X[i,j],Y[i,j],Z[i,j],1,Rb,Rd)
+            
+            #shift = u_sum(X[i,j],Y[i,j],Z[i,j],1,Rb,Rd,
+            #            [2.,0.,0.],[0.,1.,0.],[0.,0.,1.],[5,10,0])
+            
+            shift, derr = u_pbc(X[i,j], Y[i,j], Z[i,j], 1, Rb, Rd,
+                        [2.,0.,0.], [0.,1.,0.], [0.,0.,3.], [5,10,3],
+                        [-1.,-0.5,0.0001], u0err,derr) 
+            X[i,j] += shift[0]; Y[i,j] += shift[1]; Z[i,j] += shift[2]
+            
+            
+    # Plot a basic wireframe.
+    ax.set_xlim3d([-1 , 1])
+    ax.set_ylim3d([-0.5,0.5])
+    ax.set_zlim3d([-1, 1])
+    ax.plot_wireframe(X, Y, Z, rstride=1, cstride=1)
 
-# Calculate u_sum
-for i in range(len(R)):
-    Z += u_dip(X,Y,1,[[R[i][0]+0.5,R[i][1]], [R[i][0]-0.5,R[i][1]]])
-
-# Calculate u_err and u_pbc
-d = np.zeros((3,3))
-
-
-for i in range(M):
-    for j in range(N):
-        if (X[i,j]>roi[0][1] or X[i,j]<roi[0][0] or Y[i,j]>roi[1][1] or Y[i,j]<roi[1][0]):
-            Z[i,j] = np.NaN
-        else:
-            pass
+    plt.show()
+    
+    
+if __name__=="__main__":
+    main()
 
 
-# Plot a basic wireframe.
-ax.set_xlim3d([-1 , 1])
-ax.set_ylim3d([-0.5,0.5])
-ax.set_zlim3d([-1, 1])
-ax.plot_wireframe(X, Y, Z, rstride=1, cstride=1)
-
-plt.show()
