@@ -1,0 +1,10 @@
+Calculation of the prelogarithmic energy factor
+
+In order to calculate the prelogarithmic energy factor we need to determine the
+energy per unit length for a straight dislocation inside a cylinder.
+
+The max radius will be Rmax = 15nm
+==> Lz = 150A and Z=[-1100] ==> Lz = 150/sqrt(3)/3.232 ~= 26 unit cells
+To keep the box as spherical as possible Lx=Lz=Ly
+==> Lx = 150/3.232 = 46 unit cells
+and Ly = 150/5.165 = 30 unit cells

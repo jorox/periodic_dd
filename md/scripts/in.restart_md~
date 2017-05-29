@@ -1,0 +1,22 @@
+# Input file for creating an Fe/Al interface
+#  ** Z-direction Al(001)/Fe(001) plane stacking
+#  ** X-direction Al[100]/Fe[110] this produces the best lattice matching since
+#     Fe spacing along [110] is equal to a*sqrt(2) = 4.0538
+#  in order to stack different crystallographic planes, the box spacing needs
+#  to be correctly modified
+
+#  Created by Wassim Kassem 18/07/2016
+
+units       metal
+dimension   3
+boundary    f      f     f  #layers are stacked along z
+atom_style  atomic          #no need for charges or bonds
+
+#------------ Constant parameters -------------------------------
+variable   sqrt3      equal  sqrt(3)
+
+#------------ Variable parameters -------------------------------
+variable    T     index  300 #Kelvins - temperature for equilibration of the system
+variable    T2    equal 2*$T
+
+read_restart    ${res}/equil.restart

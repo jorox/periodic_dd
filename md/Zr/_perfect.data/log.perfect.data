@@ -1,0 +1,114 @@
+LAMMPS (14 May 2016)
+
+
+#  Created by Wassim Kassem 18/07/2016
+
+units       metal
+dimension   3
+boundary    p      p     p  #layers are stacked along z
+atom_style  atomic          #no need for charges or bonds
+
+#------------ Constant parameters -------------------------------
+variable   sqrt3      equal  sqrt(3)
+
+#------------ Variable parameters -------------------------------
+variable    T     index  300 #Kelvins - temperature for equilibration of the system
+variable    T2    equal 2*$T
+variable    T2    equal 2*300
+
+#------------ Create the box ----------------------------------
+read_data   ${fdata}
+read_data   /home/wassim/work/Cai_periodic/md/Zr/perfect.data
+  triclinic box = (-9.70236 -41.3438 -44.8133) to (9.70236 41.3438 44.8133) with tilt (0 0 0)
+  1 by 4 by 6 MPI processor grid
+  reading atoms ...
+  6144 atoms
+
+#----------------------------Define potential-------------------
+mass        1 ${emass}
+mass        1 91.224
+timestep    0.005
+
+pair_style eam/fs
+pair_coeff * * ${potfile} ${ename} #Terentyev, Bacon, Osetsky J. Phys. COndens. Matter. 20 2008 445007
+pair_coeff * * ../potentials/Zr_3.eam.fs ${ename} 
+pair_coeff * * ../potentials/Zr_3.eam.fs Zr 
+
+velocity    all set 0 0 0
+
+
+#---------- Minmize forces ----------------------------------
+variable      nmin index 20000
+variable      ndump equal ${nmin}/1000
+variable      ndump equal 20000/1000
+
+timestep      0.05
+compute       mype all pe
+variable      eelastic    equal c_mype/lx  #elastic energy per A along X
+
+thermo        100
+thermo_style  custom step press v_eelastic
+
+dump          min all custom ${ndump} ${res}/dump.min.dat id x y z
+dump          min all custom 20 ${res}/dump.min.dat id x y z
+dump          min all custom 20 /home/wassim/work/Cai_periodic/md/Zr/_perfect.data/dump.min.dat id x y z
+
+fix           bxrlx all box/relax z 0.0 xz 0.0 xy 0.0 y 0.0
+
+#min_style     quickmin
+minimize      1e-20 1e-30 ${nmin} 100000
+minimize      1e-20 1e-30 20000 100000
+WARNING: Resetting reneighboring criteria during minimization (../min.cpp:168)
+Neighbor list info ...
+  1 neighbor list requests
+  update every 1 steps, delay 0 steps, check yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 9.6
+  ghost atom cutoff = 9.6
+  binsize = 4.8 -> bins = 5 18 19
+Memory usage per processor = 4.57306 Mbytes
+Step Press eelastic 
+       0   -105.83893   -2100.7081 
+      95   -6.2009527   -2100.7081 
+Loop time of 3.20116 on 24 procs for 95 steps with 6144 atoms
+
+12.5% CPU use with 24 MPI tasks x no OpenMP threads
+
+Minimization stats:
+  Stopping criterion = energy tolerance
+  Energy initial, next-to-last, final = 
+        -40763.6527415     -40763.6532787     -40763.6532787
+  Force two-norm initial, final = 14.7087 0.000118442
+  Force max component initial, final = 12.2665 0.000102315
+  Final line search alpha, max atom move = 1 0.000102315
+  Iterations, force evaluations = 95 190
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 1.2713     | 1.366      | 1.4677     |   4.6 | 42.67
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 1.3042     | 1.4062     | 1.4889     |   4.2 | 43.93
+Output  | 0.029552   | 0.04955    | 0.071      |   8.1 |  1.55
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 0.3794     |            |       | 11.85
+
+Nlocal:    256 ave 264 max 240 min
+Histogram: 8 0 0 0 0 0 0 0 0 16
+Nghost:    1869 ave 1907 max 1806 min
+Histogram: 8 0 0 0 0 0 0 0 8 8
+Neighs:    18688 ave 19392 max 17520 min
+Histogram: 8 0 0 0 0 0 0 0 8 8
+
+Total # of neighbors = 448512
+Ave neighs/atom = 73
+Neighbor list builds = 0
+Dangerous builds = 0
+min_style     cg
+#fix           bxrlx all box/relax x 0.0 y 0.0 fixedpoint 0 0 0
+#minimize      1e-35 1e-50 50000 1000000
+#unfix         bxrlx
+
+undump        min
+unfix        bxrlx
+quit

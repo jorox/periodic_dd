@@ -2,10 +2,10 @@
 =================
 3D wireframe plot of a PBC dislocation dipole
 =================
-
 A very basic demonstration of a wireframe plot.
 '''
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 
 def u_dip(x,y,z,b,Rb,Rd):
@@ -59,7 +59,6 @@ def u_pbc(x,y,z,b,Rb,Rd,cx,cy,cz,n,origin,u0,d=None):
     | x1 y1 z1 | |di1|    |u(r1)i|
     | x2 y2 z2 | |di2| =  |u(r2)i|   where i=1,2,3 
     | x3 y3 z3 | |di3|    |u(r3)i| 
-
     """
     # some prep
     Rb = np.array(Rb)
@@ -75,30 +74,31 @@ def u_pbc(x,y,z,b,Rb,Rd,cx,cy,cz,n,origin,u0,d=None):
         rsp.append(origin + 0.3*cy)
         rsp.append(origin + 0.5*cx)
         rsp.append(origin + cy + 0.2*cx)
-        #rsp.append(origin + cx + cy)
-        #rsp = np.insert(rsp,3,1,axis=1) # insert a column of '1's to the end
+        rsp.append(origin + 0.6*cx + cy)
+        rsp = np.insert(rsp,3,1,axis=1) # insert a column of '1's to the end
         print(rsp)
         print(" determinant of mat = %1.5f"%(np.linalg.det(rsp)))
         
         # caluclate the values of u_sum at those points
         u_sum_sp = []
-        for i in range(3):
+        for i in range(len(rsp)):
             u_sum_sp.append(u_sum(rsp[i][0],rsp[i][1],rsp[i][2],b,Rb,Rd,cx,cy,cz,n))
     
         # calculate the inverse matrix 
         inv_rsp = np.linalg.inv(rsp)
         d = []
-        #u0 = []
+        u0 = []
         
         for i in range(3):
             tmp = [u_sum_sp[j][i] for j in range(3)]
             tmp = np.array(tmp)
             du_row = np.dot(inv_rsp,tmp) 
             d.append(du_row[:3])
-            #u0.append(du_row[3])
+            u0.append(du_row[3])
             # determine u_0 knowing that d.r+u_0 = [0,0,z] at central image 
             # limits
         d = np.array(d)
+        u0 = np.array(u0)
         
     tmp = u_sum(x,y,z,b,Rb,Rd,cx,cy,cz,n)
     tmp = tmp - np.dot(d,np.array([x,y,z])) - u0
@@ -151,5 +151,3 @@ def main():
     
 if __name__=="__main__":
     main()
-
-

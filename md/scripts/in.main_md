@@ -1,0 +1,73 @@
+
+
+#  Created by Wassim Kassem 18/07/2016
+
+units       metal
+dimension   3
+boundary    p      p     p  #layers are stacked along z
+atom_style  atomic          #no need for charges or bonds
+
+#------------ Constant parameters -------------------------------
+variable   sqrt3      equal  sqrt(3)
+
+#------------ Variable parameters -------------------------------
+variable    T     index  300 #Kelvins - temperature for equilibration of the system
+variable    T2    equal 2*$T
+
+#------------ Create the box ----------------------------------
+read_data   ${fdata}
+
+#----------------------------Define potential-------------------
+mass        1 ${emass}
+timestep    0.005
+
+pair_style eam/fs
+pair_coeff * * ${potfile} ${ename} #Terentyev, Bacon, Osetsky J. Phys. COndens. Matter. 20 2008 445007
+
+velocity    all set 0 0 0
+
+
+#---------- Minmize forces ----------------------------------
+variable      nmin index 20000
+variable      ndump equal ${nmin}/1000
+
+timestep      0.05
+compute       mype all pe
+variable      eelastic    equal c_mype/lx  #elastic energy per A along X
+
+thermo        100
+thermo_style  custom step press v_eelastic
+
+dump          min all custom ${ndump} ${res}/dump.min.dat id x y z
+
+fix           bxrlx all box/relax z 0.0 xz 0.0 xy 0.0 y 0.0
+
+#min_style     quickmin
+minimize      1e-20 1e-30 ${nmin} 100000
+min_style     cg
+#fix           bxrlx all box/relax x 0.0 y 0.0 fixedpoint 0 0 0
+#minimize      1e-35 1e-50 50000 1000000
+#unfix         bxrlx
+
+undump        min
+unfix        bxrlx
+quit
+#----------- Equilibrate -----------------------------------
+timestep        0.005
+variable        teq index 50        #ps
+variable        neq equal ${teq}/dt
+
+
+reset_timestep  0
+velocity        all create ${T2} 12447 dist gaussian sum no mom yes rot yes
+
+fix             1 all npt temp ${T} ${T} 0.1 tri 0.0 0.0 1.0
+thermo          100
+thermo_style    custom step temp press v_eelastic
+
+dump            eq all custom ${ndump} ${res}/eq.dump.dat id x y z
+
+run             ${neq}
+write_restart   ${res}/equil.restart
+
+undump          eq

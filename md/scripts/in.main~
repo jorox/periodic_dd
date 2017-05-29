@@ -1,0 +1,80 @@
+# Input file for creating an Fe/Al interface
+#  ** Z-direction Al(001)/Fe(001) plane stacking
+#  ** X-direction Al[100]/Fe[110] this produces the best lattice matching since
+#     Fe spacing along [110] is equal to a*sqrt(2) = 4.0538
+#  in order to stack different crystallographic planes, the box spacing needs
+#  to be correctly modified
+
+#  Created by Wassim Kassem 18/07/2016
+
+units       metal
+dimension   3
+boundary    p      p     f  #layers are stacked along z
+atom_style  atomic          #no need for charges or bonds
+
+#------------ Constant parameters -------------------------------
+variable   latparama  equal  3.232
+variable   sqrt3      equal  sqrt(3)
+variable   latparamc  equal  5.165
+variable   covera     equal  ${latparamc}/${latparama}    
+#------------ Variable parameters -------------------------------
+variable    T     index  3 #Kelvins - temperature for equilibration of the system
+variable    T2    equal 2*$T
+#------------ Create the box ----------------------------------
+                                           
+lattice     hcp ${latparama} &
+	    orient x 1 0 0 &
+	    orient y 0 1 0 &
+            orient z 0 0 1 &
+	    spacing 1.0 ${sqrt3} ${covera}
+
+read_data   ${fdata}
+#------------------ Define immobile zones
+variable      tmp0 equal 2.5
+variable      tmp1 equal zhi-${tmp0}
+variable      tmp2 equal zlo+${tmp0}
+region        rgfix_top block INF INF INF INF ${tmp1} INF     units box
+region        rgfix_bot block INF INF INF INF INF   ${tmp2}   units box
+group         atfix_top region rgfix_top
+group         atfix_bot region rgfix_bot
+group         freeatoms subtract all atfix_top atfix_bot
+#----------------------------Define potential-------------------
+mass        1 91.224
+timestep    0.005
+change_box  all z delta -5 5 units box
+
+pair_style eam/fs
+pair_coeff * * ${potfile} ${ename} #Terentyev, Bacon, Osetsky J. Phys. COndens. Matter. 20 2008 445007
+
+variable    nil equal 0.0
+fix         freez atfix_top  setforce 0.0 NULL NULL
+fix         freez1 atfix_bot setforce 0.0 NULL NULL
+velocity    atfix_top set 0 0 0
+velocity    atfix_bot set 0 0 0
+
+
+#---------- Minmize forces ----------------------------------
+timestep      0.05
+compute       mype all pe
+compute       mype2 all pe/atom
+variable      peatom    equal c_mype/count(all)  #PE per atom
+variable      myradius  atom  sqrt(x^2+z^2)
+
+variable      tmin index 20000
+
+thermo        100
+thermo_style  custom step v_peatom press lx ly lz
+dump          min all custom 200 ${res}/dump.min.dat id x y z c_mype2
+
+min_style     quickmin
+minimize      1e-20 1e-30 ${tmin} 100000
+min_style     cg
+#fix           bxrlx all box/relax x 0.0 y 0.0 fixedpoint 0 0 0
+#minimize      1e-35 1e-50 50000 1000000
+#unfix         bxrlx
+
+timestep      0.005
+undump        min
+write_dump    all custom ${res}/dump.final.dat &
+                id x y z v_myradius c_mype2 &
+                modify sort 5

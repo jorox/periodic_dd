@@ -1,0 +1,213 @@
+LAMMPS (14 May 2016)
+
+
+#  Created by Wassim Kassem 18/07/2016
+
+units       metal
+dimension   3
+boundary    p      p     p  #layers are stacked along z
+atom_style  atomic          #no need for charges or bonds
+
+#------------ Constant parameters -------------------------------
+variable   sqrt3      equal  sqrt(3)
+
+#------------ Variable parameters -------------------------------
+variable    T     index  300 #Kelvins - temperature for equilibration of the system
+variable    T2    equal 2*$T
+variable    T2    equal 2*300
+
+#------------ Create the box ----------------------------------
+read_data   ${fdata}
+read_data   /home/wassim/work/Cai_periodic/md/Zr/dipole.data
+  triclinic box = (-9.70236 -41.3438 -44.8133) to (9.70236 41.3438 44.8133) with tilt (0 0 0)
+  1 by 2 by 2 MPI processor grid
+  reading atoms ...
+  6144 atoms
+
+#----------------------------Define potential-------------------
+mass        1 ${emass}
+mass        1 91.224
+timestep    0.005
+
+pair_style eam/fs
+pair_coeff * * ${potfile} ${ename} #Terentyev, Bacon, Osetsky J. Phys. COndens. Matter. 20 2008 445007
+pair_coeff * * ../potentials/Zr_3.eam.fs ${ename} 
+pair_coeff * * ../potentials/Zr_3.eam.fs Zr 
+
+velocity    all set 0 0 0
+
+
+#---------- Minmize forces ----------------------------------
+variable      nmin index 20000
+variable      ndump equal ${nmin}/1000
+variable      ndump equal 10000/1000
+
+timestep      0.05
+compute       mype all pe
+variable      eelastic    equal c_mype/lx  #elastic energy per A along X
+
+thermo        100
+thermo_style  custom step press v_eelastic
+
+dump          min all custom ${ndump} ${res}/dump.min.dat id x y z
+dump          min all custom 10 ${res}/dump.min.dat id x y z
+dump          min all custom 10 /home/wassim/work/Cai_periodic/md/Zr/_dipole.data/dump.min.dat id x y z
+
+fix           bxrlx all box/relax z 0.0 xz 0.0
+
+#min_style     quickmin
+minimize      1e-20 1e-30 ${nmin} 100000
+minimize      1e-20 1e-30 10000 100000
+WARNING: Resetting reneighboring criteria during minimization (../min.cpp:168)
+Neighbor list info ...
+  1 neighbor list requests
+  update every 1 steps, delay 0 steps, check yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 9.6
+  ghost atom cutoff = 9.6
+  binsize = 4.8 -> bins = 5 18 19
+Memory usage per processor = 4.69112 Mbytes
+Step Press eelastic 
+       0   -1421.9908    -2099.048 
+     100   -929.67534   -2099.1076 
+     200   -895.03776   -2099.1582 
+     300   -866.08671   -2099.2007 
+     400   -842.79199    -2099.235 
+     500   -825.12376   -2099.2611 
+     600   -813.03945   -2099.2792 
+     700    -806.4136   -2099.2895 
+     800   -813.48576   -2099.3314 
+     900   -772.84936   -2099.3817 
+    1000   -758.63547   -2099.4031 
+    1100   -750.08674   -2099.4221 
+    1200   -748.74068   -2099.4372 
+    1300     -755.789   -2099.4488 
+    1400    -763.8346   -2099.4524 
+    1500   -757.72968   -2099.4643 
+    1600   -841.47353   -2099.4707 
+    1700   -798.84764   -2099.4727 
+    1800   -811.22727   -2099.4763 
+    1900   -817.48095   -2099.4787 
+    2000   -825.95905   -2099.4817 
+    2100   -822.23988   -2099.4925 
+    2200   -879.16743   -2099.4974 
+    2300   -843.38852   -2099.5012 
+    2400   -854.00372   -2099.5076 
+    2500   -824.44704   -2099.5101 
+    2600   -830.61633   -2099.5127 
+    2700   -834.96319   -2099.5154 
+    2800      -838.84   -2099.5181 
+    2900   -845.81875   -2099.5208 
+    3000   -849.59925   -2099.5236 
+    3100   -896.94014   -2099.5266 
+    3200   -898.96792   -2099.5296 
+    3300   -903.00793   -2099.5327 
+    3400   -918.73727   -2099.5358 
+    3500   -910.11021   -2099.5388 
+    3600   -913.02789   -2099.5417 
+    3700   -901.60815   -2099.5443 
+    3800   -879.70405   -2099.5465 
+    3900   -882.93973   -2099.5486 
+    4000   -883.22404   -2099.5504 
+    4100   -884.21402   -2099.5521 
+    4200   -895.96704   -2099.5543 
+    4300   -929.39527   -2099.5589 
+    4400    -936.2518   -2099.5631 
+    4500   -918.89981   -2099.5641 
+    4600   -960.39294   -2099.5656 
+    4700   -933.31243   -2099.5663 
+    4800   -929.84839   -2099.5679 
+    4900   -921.84408   -2099.5684 
+    5000   -950.52288   -2099.5688 
+    5100   -922.55882   -2099.5691 
+    5200   -953.31915   -2099.5696 
+    5300   -923.11414   -2099.5705 
+    5400   -958.56545   -2099.5711 
+    5500   -967.29359   -2099.5715 
+    5600    -973.1163   -2099.5718 
+    5700   -959.93619   -2099.5722 
+    5800   -981.70294   -2099.5727 
+    5900   -966.04917   -2099.5748 
+    6000   -946.90278   -2099.5751 
+    6100   -941.16468   -2099.5754 
+    6200    -976.8964   -2099.5769 
+    6300   -972.46839   -2099.5777 
+    6400   -973.20773   -2099.5798 
+    6500    -984.1184   -2099.5811 
+    6600   -985.29798   -2099.5815 
+    6700   -985.64173   -2099.5817 
+    6800   -982.99421   -2099.5821 
+    6900   -976.93974   -2099.5827 
+    7000    -999.9499   -2099.5844 
+    7100   -992.56116   -2099.5846 
+    7200    -983.6564   -2099.5855 
+    7300    -991.1077   -2099.5859 
+    7400   -991.34421   -2099.5878 
+    7500   -998.36478    -2099.588 
+    7600   -998.75114   -2099.5884 
+    7700   -986.65774   -2099.5887 
+    7800   -991.29888   -2099.5894 
+    7900   -980.84334   -2099.5899 
+    8000   -998.79853   -2099.5902 
+    8100   -995.49682    -2099.591 
+    8200    -992.1513   -2099.5912 
+    8300   -1016.1033   -2099.5913 
+    8400   -993.79364    -2099.592 
+    8500   -983.05661   -2099.5922 
+    8600    -991.3766   -2099.5939 
+    8700    -997.3588   -2099.5943 
+    8800    -984.8528   -2099.5945 
+    8900   -991.17344   -2099.5947 
+    9000   -993.60094   -2099.5952 
+    9100   -983.51452   -2099.5956 
+    9200   -988.21427   -2099.5963 
+    9300   -978.93212   -2099.5965 
+    9400   -986.55243   -2099.5968 
+    9500   -982.30837   -2099.5978 
+    9600   -989.81163   -2099.5987 
+    9700   -985.67018   -2099.5991 
+    9800   -992.50974   -2099.6015 
+    9900   -985.34849   -2099.6019 
+   10000   -973.65552   -2099.6023 
+Loop time of 196.465 on 4 procs for 10000 steps with 6144 atoms
+
+77.3% CPU use with 4 MPI tasks x no OpenMP threads
+
+Minimization stats:
+  Stopping criterion = max iterations
+  Energy initial, next-to-last, final = 
+        -40731.4384507     -40742.1954954     -40742.1955478
+  Force two-norm initial, final = 136.711 1.63954
+  Force max component initial, final = 122.014 1.63034
+  Final line search alpha, max atom move = 0.00022049 0.000359473
+  Iterations, force evaluations = 10000 14736
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 154.18     | 155.67     | 156.83     |   9.0 | 79.23
+Neigh   | 0.024545   | 0.025537   | 0.026578   |   0.5 |  0.01
+Comm    | 24.806     | 26.091     | 27.427     |  21.8 | 13.28
+Output  | 5.7829     | 5.9101     | 6.0034     |   3.4 |  3.01
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 8.772      |            |       |  4.46
+
+Nlocal:    1536 ave 1581 max 1500 min
+Histogram: 2 0 0 0 0 0 0 1 0 1
+Nghost:    4740 ave 4776 max 4695 min
+Histogram: 1 0 1 0 0 0 0 0 0 2
+Neighs:    113134 ave 115965 max 110874 min
+Histogram: 2 0 0 0 0 0 0 1 0 1
+
+Total # of neighbors = 452538
+Ave neighs/atom = 73.6553
+Neighbor list builds = 3
+Dangerous builds = 0
+min_style     cg
+#fix           bxrlx all box/relax x 0.0 y 0.0 fixedpoint 0 0 0
+#minimize      1e-35 1e-50 50000 1000000
+#unfix         bxrlx
+
+undump        min
+unfix        bxrlx
+quit
