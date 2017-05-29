@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<root>
+  <integration
+      time="0"
+      dtime="0.000005"
+      nstep="1"
+      saving_frequency="1"/>
+  <loading mode="strainratedriven" >
+    <step time="0.0" controlscheme="ConstantStrainRateBulatov" monitor="XZ" strainrate="0" />
+  </loading>
+  <discretization lmin="4." lmax="16." />
+  <intersection captureradius="1.0" captureangle="0.25" ltiny="0.0001" />
+</root>

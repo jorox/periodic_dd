@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<root>
+    <topology>
+	<bot_left_corner  x="-9.0" y="-44.0" z="-48.51" />
+	<upp_right_corner x="+9.0" y="+44.0" z="+48.51" />
+	<pbc x="true" y="true" z="false"/>
+	<blobs>
+	    <blob tag="0" object="PeriodicThinFilm" 
+		  axis="z" center="0.0" thickness="97.2" />
+	</blobs>  
+    </topology>
+</root>
+

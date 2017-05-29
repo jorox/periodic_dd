@@ -1,0 +1,15 @@
+<?xml version="1.0" ?>
+<root>
+  <nanostructure>
+    <object name="HCPPrismaticLoop"
+	    bh="2" bk="2" bi="-4" bl="0"
+	    cx="18.25" cy="140" cz="0"
+	    vacancy="0"
+	    natoms="156" />
+    <object name="Infinite_Screw"
+	    h="1" k="-1" i="0" l="0" 
+	    bh="2" bk="2" bi="-4" bl="0"
+	    cx="0" cy="-0" cz="0"
+	    direction="-1" />
+  </nanostructure>
+</root>

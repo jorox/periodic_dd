@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<root>
+  <materials>
+    <material name="Zr">
+      <force mode="analytical">
+        <elastic name="IsotropicArsenlis" core_width="3.5000" ltiny="1.0000e-08" thetac="1.0000e-03"/>
+        <core_energy name="CoreEnergy" Rext="60000.0" Rint="10.0" ltcorrection="0.0926"/>
+      </force>
+      <bravais crystallo="HCP" a="3.23" c="5.14"/>
+      <lame lambda="39926" mu="38693"/>
+      <mobilitylaws>
+        <tangeantial viscosity="0.003" length="5" PhysicalNodeViscosity="1.8"/>
+        <mobility>
+          <constitutive system="prismatic" h="1" k="0" i="-1" l="0" bh="2" bk="-4" bi="2" bl="0" name="ViscousGlide" B="0.03"/>
+        </mobility>
+        <mobility>
+          <constitutive system="basal" h="0" k="0" i="0" l="1" bh="2" bk="-4" bi="2" bl="0" name="ViscousGlide" B="0.044"/>
+        </mobility>
+      </mobilitylaws>
+    </material>
+  </materials>
+</root>

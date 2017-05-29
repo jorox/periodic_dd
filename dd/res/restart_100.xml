@@ -1,0 +1,16 @@
+<?xml version="1.0" ?>
+<root time="0.001000000000000" nstep="100">
+    <stress sig11="0.000000000000000" sig22="0.000000000000000" sig33="0.000000000000000" sig12="0.000000000000000" sig13="0.000000000000000" sig23="0.000000000000000" />
+    <strain eps11="0.000000000000000" eps22="0.000000000000000" eps33="0.000000000000000" eps12="0.000000000000000" eps13="0.000000000000000" eps23="0.000000000000000" />
+    <plasticstrain eps11="0.000000000000000" eps22="0.000000000000000" eps33="0.000000000000000" eps12="0.000000000000000" eps13="0.000000000000000" eps23="0.000000000000000" />
+    <save_dir path_name="/home/wk234832/work/Cai_periodic/dd/res" />
+    <topology path_name="/home/wk234832/work/Cai_periodic/dd/topoScrew.xml" />
+    <microstructure path_name="/home/wk234832/work/Cai_periodic/dd/microPrism.xml" />
+    <inputdata path_name="/home/wk234832/work/Cai_periodic/dd/donnes.xml" />
+    <graphs>
+        <graph path_name="/home/wk234832/work/Cai_periodic/dd/res/es_graph_0_step_100.xml" />
+    </graphs>
+    <materials>
+        <material path_name="/home/wk234832/work/Cai_periodic/dd/Zr.xml" />
+    </materials>
+</root>

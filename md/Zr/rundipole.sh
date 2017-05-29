@@ -12,7 +12,7 @@ resdir=$currdir/_$fname              #results directory
 
 mkdir -p $resdir
 
-mpirun -np 4 lmp_mpi \
+mpirun -np 20 lmp_mpi \
 -var fdata $fdata \
 -var potfile $potfile \
 -var ename $ename \

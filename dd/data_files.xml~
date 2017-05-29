@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<root >
+  <save_dir path_name="res" />
+  <topology path_name="topoScrew.xml" />
+  <microstructure path_name="microPrism.xml" />
+  <inputdata path_name="donnees.xml" />
+  <graphs><graph path_name="graph.xml" /></graphs>
+  <materials><material path_name="Zr.xml" /></materials>
+</root>

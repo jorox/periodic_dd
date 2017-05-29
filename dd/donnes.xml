@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<root>
+  <integration time="0" dtime="0.00001" nstep="100" saving_frequency="1"/>
+  <loading mode="stressdriven">
+    <step time="0" stress="regularstress" sig11="0.0" sig22="0.0" sig33="0.0" sig12="0.0" sig13="0" sig23="0.0"/>
+  </loading>
+  <discretization lmin="1.0" lmax="4.0"/>
+  <intersection captureradius="1.0" captureangle="0.25" ltiny="0.0001"/>
+</root>
